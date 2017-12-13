@@ -3,6 +3,7 @@
 
 
 from game import Game
+from gamestats import GameStats
 import ai
 
 
@@ -58,8 +59,8 @@ class Curses_ui_bot:
         ################################################################
         # Put your call to AI code here
         ################################################################
-
         self.ai.process(self.game)
+      
         self.path_to_goal, \
             self.action, \
             self.decision, \

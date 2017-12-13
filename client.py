@@ -11,6 +11,8 @@ import os
 import configparser
 import ast
 
+import traceback
+
 TIMEOUT = 15
 
 
@@ -322,7 +324,13 @@ class Client:
                         elif line.strip() == "s":
                             self.save_game()
                     if self.bot.running:
-                        direction = self.bot.move(self.state)
+                        try: 
+                            direction = self.bot.move(self.state)
+                        except Exception as e:
+                            if self.gui.log_win:
+                                self.pprint("Error at bot.move:", str(e))
+                            traceback.print_exc()
+                                
                         self.display_game()
                 except Exception as e:
                     # Super error trap !
