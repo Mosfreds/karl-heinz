@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
+
 class Hero:
     """The Hero object"""
     def __init__(self, hero):
