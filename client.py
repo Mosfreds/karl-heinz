@@ -330,7 +330,6 @@ class Client:
                             if self.gui.log_win:
                                 self.pprint("Error at bot.move:", str(e))
                             traceback.print_exc()
-                                
                         self.display_game()
                 except Exception as e:
                     # Super error trap !
@@ -340,6 +339,7 @@ class Client:
                         self.pprint("doug.letough@free.fr.")
                         self.gui.pause()
                     self.running = False
+                    traceback.print_exc()
                     return
                 if not self.is_game_over():
                     # Send the move and receive the updated game state

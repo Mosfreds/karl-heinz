@@ -10,6 +10,7 @@
 import random
 from  gamestats import GameStats
 from queue import PriorityQueue
+from utils import positions
 
 class AI:
     """Pure random A.I, you may NOT use it to win ;-)"""
@@ -52,32 +53,25 @@ class AI:
                  A tuple containing the nearest enenmy position (see above)"""
         gamestats = GameStats(self.game)
         
-        actions = ['mine', 'tavern', 'fight', 'wait']
 
         decisions = gamestats.motivations
-        decision = decisions[0]
+        chosen_action = decisions[0]
         
-        action = "We go " + str(decision[1]) + " at " + str(decision[2])
-        
+        #print(decisions)
 
-        print(decision)
-        print(self.shortest_path_dist(self.game.hero.pos, decision[2]))
-        
+        actions = ['mine', 'drink', 'attack', 'wait']
 
-        
+        # informational output
+        decision = list(map(lambda action: [(d[2], d[0]) for d in decisions if d[2]==action][0], actions))
 
-        walkable = []
-        path_to_goal = []
-        dirs = ["North", "East", "South", "West", "Stay"]
+        # path to the chosen target
+        path_tree , path_cost = (self.shortest_path_dist(self.game.hero.pos, chosen_action[3]))
+        path = self.get_path(path_tree, chosen_action[3])
+        path_to_goal = path
 
-
-        # With such a random path, path highlighting would
-        # display a random continuous line of red bullets over the map.
-        first_cell = self.game.hero.pos
-        path_to_goal.append(first_cell)
-
-        hero_move = random.choice(dirs)
-        action = random.choice(actions)
+        # next step towards the goal
+        hero_move = positions.direction_to_cmd(self.first_step(path))
+        action = chosen_action[2] + ":" + hero_move 
         #decision = decisions[action]
         nearest_enemy_pos = random.choice(self.game.heroes).pos
         nearest_mine_pos = random.choice(self.game.mines_locs)
@@ -92,25 +86,14 @@ class AI:
                 nearest_tavern_pos)
 
 
-        for i in range(int(round(random.random()*self.game.board_size))):
-            for i in range(len(walkable)):
-                random.shuffle(walkable)
-                if (walkable[i][0] - first_cell[0] == 1 and
-                        walkable[i][1] - first_cell[1] == 0) or \
-                        (walkable[i][1] - first_cell[1] == 1 and
-                        walkable[i][0] - first_cell[0] == 0):
-                    path_to_goal.append(walkable[i])
-                    first_cell = walkable[i]
-                    break
-
-
-        for y in range(self.game.board_size):
-            for x in range(self.game.board_size):
-                if (y, x) not in self.game.walls_locs or \
-                        (y, x) not in self.game.taverns_locs or \
-                        (y, x) not in self.game.mines_locs:
-
-                    walkable.append((y, x))
+    def get_path(self, tree, goal):
+        last = tree[goal]
+        
+        path = [goal]
+        while not last is None:
+            path = [last] + path
+            last = tree[last]
+        return path
 
 
     def shortest_path_dist(self, start, goal):
@@ -128,7 +111,7 @@ class AI:
             if current == goal:
                 break
 
-            candidates = self.movable_neighbour_fields(current)
+            candidates = self.movable_neighbour_fields(current, goal)
             for candidate in candidates:
                 new_cost = cost_so_far[current] + 1
                 if (candidate not in cost_so_far) or (new_cost < cost_so_far[candidate]):
@@ -140,10 +123,10 @@ class AI:
         return came_from, cost_so_far
 
 
-    def movable_neighbour_fields(self, pos):
+    def movable_neighbour_fields(self, pos, goal):
         """get all the positions you can move to from pos"""
         neighbours = [ positions.add(pos, d) for d in positions.directions ]
-        return [p for p in neighbours if self.is_movable_position(p)]
+        return [p for p in neighbours if self.is_movable_position(p) or p == goal]
         
 
     def is_movable_position(self, p):
@@ -151,8 +134,11 @@ class AI:
             raise Exception("position p is None")
         return p[0] >= 0 and p[0] < self.game.board_size \
                and p[1] >= 0 and p[1] < self.game.board_size \
-               and p not in self.game.walls_locs
+               and not (p in self.game.walls_locs or p in self.game.taverns_locs or p in self.game.mines_locs)
 
+
+    def first_step(self,path):
+        return positions.sub(path[1],path[0])
 
 
 if __name__ == "__main__":
